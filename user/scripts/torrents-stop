@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+transmission-remote --exit >/dev/null 2>&1 || pkill -x transmission-daemon 2>/dev/null || true

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[ -s "$HOME/.config/rice/generated/palette.sh" ] || theme-sync --startup >/dev/null
+
+# One Waybar process creates two fully transparent native Wayland layers: tiny
+# clock text at top-left and status text at bottom-right. No space is reserved
+# and pointer input passes through the invisible area.
+pkill -x waybar 2>/dev/null || true
+systemctl --user import-environment WAYLAND_DISPLAY DISPLAY SWAYSOCK XDG_CURRENT_DESKTOP >/dev/null 2>&1 || true
+systemctl --user restart dunst.service >/dev/null 2>&1 || true
+waybar -c "$HOME/.config/rice/waybar/config.json" -s "$HOME/.config/rice/waybar/style.css" >/tmp/rice-waybar.log 2>&1 &

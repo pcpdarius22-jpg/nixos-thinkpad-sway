@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+pw-metadata -n settings 0 clock.force-quantum 128
+printf 'PipeWire forced to 128-frame quantum for this session.\n'

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+fail=0
+ok() { printf 'OK   %s\n' "$1"; }
+bad() { printf 'FAIL %s\n' "$1"; fail=1; }
+need() { command -v "$1" >/dev/null 2>&1 && ok "command: $1" || bad "command: $1"; }
+
+for c in sway swaymsg foot footclient qutebrowser dunst dunstctl waybar senpai fuzzel magick jq wpctl pw-metadata reaper brightnessctl grim slurp swayidle swaylock wl-copy notify-send nvim yazi btop cmus fastfetch rice-fetch nmtui blueman-manager transmission-daemon tremc; do
+  need "$c"
+done
+
+for f in \
+  "$HOME/.config/sway/config" \
+  "$HOME/.config/foot/foot.ini" \
+  "$HOME/.config/rice/reference/773.jpg" \
+  "$HOME/.local/share/rice/wallpaper.jpg" \
+  "$HOME/.config/rice/generated/palette.json" \
+  "$HOME/.config/rice/generated/sway-colors.conf" \
+  "$HOME/.config/rice/generated/qute-colors.py" \
+  "$HOME/.config/rice/generated/dunstrc" \
+  "$HOME/.config/rice/yazi/theme.toml" \
+  "$HOME/.config/rice/waybar/config.json" \
+  "$HOME/.config/rice/waybar/style.css"
+do
+  [ -s "$f" ] && ok "file: $f" || bad "file: $f"
+done
+
+if fc-match -f '%{family}\n' 'PxPlus IBM VGA 8x16' | head -1 | grep -Fq 'PxPlus IBM VGA 8x16'; then ok 'font: PxPlus IBM VGA 8x16'; else bad 'font: PxPlus IBM VGA 8x16'; fi
+if foot -C -c "$HOME/.config/foot/foot.ini" >/dev/null 2>&1; then ok 'Foot config'; else bad 'Foot config'; fi
+if sway -C -c "$HOME/.config/sway/config" >/dev/null 2>&1; then ok 'Sway config'; else bad 'Sway config'; fi
+if python3 - <<'PY' >/dev/null 2>&1
+from pathlib import Path
+compile(Path.home().joinpath('.config/qutebrowser/config.py').read_text(), 'config.py', 'exec')
+PY
+then ok 'qutebrowser config syntax'; else bad 'qutebrowser config syntax'; fi
+if python3 - <<'PY' >/dev/null 2>&1
+import tomllib
+from pathlib import Path
+tomllib.loads(Path.home().joinpath('.config/rice/yazi/theme.toml').read_text())
+PY
+then ok 'Yazi theme TOML'; else bad 'Yazi theme TOML'; fi
+if jq -e . "$HOME/.config/rice/waybar/config.json" >/dev/null 2>&1; then ok 'Waybar JSON'; else bad 'Waybar JSON'; fi
+
+if compgen -G '/sys/class/power_supply/BAT*' >/dev/null; then ok 'battery sysfs'; else printf 'WARN battery sysfs: no BAT* found\n'; fi
+if command -v swapon >/dev/null 2>&1; then printf '\nSwap inventory (informational):\n'; swapon --show || true; fi
+exit "$fail"

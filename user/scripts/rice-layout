@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+swaymsg 'workspace number 1' >/dev/null
+
+tree() { swaymsg -t get_tree -r; }
+has_qute() { tree | jq -e '.. | objects | (.app_id? // empty) | test("qutebrowser")' >/dev/null 2>&1; }
+has_id() { tree | jq -e --arg id "$1" '.. | objects | select(.app_id? == $id)' >/dev/null 2>&1; }
+
+has_qute || qutebrowser 'https://wiki.xxiivv.com/site/travel.html' >/dev/null 2>&1 &
+has_id senpai || rice-foot -a senpai -T senpai bash -lc 'senpai || { printf \"senpai needs a valid IRC configuration.\\n\"; exec bash; }' >/dev/null 2>&1 &
+has_id editor || rice-foot -a editor -T nvim nvim >/dev/null 2>&1 &
+has_id sys || rice-foot -a sys -T system bash -lc 'rice-fetch; exec bash' >/dev/null 2>&1 &
+
+for _ in $(seq 1 60); do
+  if has_qute && has_id senpai && has_id editor && has_id sys; then break; fi
+  sleep 0.1
+done
+
+read -r OW OH < <(swaymsg -t get_outputs -r | jq -r '[.[] | select(.focused)][0].rect | "\(.width) \(.height)"')
+: "${OW:=1600}"; : "${OH:=900}"
+sx() { echo $(( $1 * OW / 1600 )); }
+sy() { echo $(( $1 * OH / 900 )); }
+
+QX=$(sx 70);  QY=$(sy 115); QW=$(sx 570); QH=$(sy 610)
+IX=$(sx 835); IY=$(sy 70);  IW=$(sx 690); IH=$(sy 350)
+NX=$(sx 1165);NY=$(sy 390); NW=$(sx 300); NH=$(sy 120)
+SX=$(sx 1050);SY=$(sy 535); SW=$(sx 500); SH=$(sy 270)
+
+swaymsg '[app_id=".*qutebrowser.*"] floating enable, resize set '"$QW $QH"', move position '"$QX $QY" >/dev/null || true
+swaymsg '[app_id="senpai"] floating enable, resize set '"$IW $IH"', move position '"$IX $IY" >/dev/null || true
+swaymsg '[app_id="editor"] floating enable, resize set '"$NW $NH"', move position '"$NX $NY" >/dev/null || true
+swaymsg '[app_id="sys"] floating enable, resize set '"$SW $SH"', move position '"$SX $SY" >/dev/null || true

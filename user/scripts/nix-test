@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+find_repo() {
+  if [ -n "${NIXOS_CONFIG_DIR:-}" ] && [ -f "$NIXOS_CONFIG_DIR/flake.nix" ]; then
+    printf '%s\n' "$NIXOS_CONFIG_DIR"; return
+  fi
+  if [ -f "$PWD/flake.nix" ]; then printf '%s\n' "$PWD"; return; fi
+  for d in "$HOME/nixos-config" "$HOME/v11-test/v11_3_2" "$HOME/nixos-thinkpad-sway-v11.3" "$HOME/v11-test/v11_3" "$HOME/nixos-thinkpad-sway-v11" "$HOME/v11/nixos-thinkpad-sway-v11"; do
+    [ -f "$d/flake.nix" ] && { printf '%s\n' "$d"; return; }
+  done
+  return 1
+}
+DIR=$(find_repo) || { echo 'Cannot find config repo; cd into it or set NIXOS_CONFIG_DIR.' >&2; exit 1; }
+cd "$DIR"
+nix flake check
+sudo nixos-rebuild test --flake .#thinkpad

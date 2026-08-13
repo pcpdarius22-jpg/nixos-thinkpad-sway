@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# NixOS services.pipewire.jack.enable replaces JACK with PipeWire's JACK shim,
+# so REAPER can use JACK directly; pw-jack is unnecessary in this setup.
+export PIPEWIRE_LATENCY="${PIPEWIRE_LATENCY:-256/48000}"
+exec reaper "$@"

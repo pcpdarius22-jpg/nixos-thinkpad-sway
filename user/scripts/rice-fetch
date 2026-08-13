@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+D='\033[2m'; B='\033[1m'; R='\033[0m'
+os='NixOS'
+if [ -r /etc/os-release ]; then . /etc/os-release; os="${PRETTY_NAME:-NixOS}"; fi
+kernel="$(uname -r)"
+host_model="$(cat /sys/devices/virtual/dmi/id/product_name 2>/dev/null || printf 'ThinkPad T440')"
+up="$(uptime -p 2>/dev/null | sed 's/^up //' || true)"
+read -r mem_used mem_total < <(awk '/MemTotal:/ {t=$2} /MemAvailable:/ {a=$2} END {printf "%.2f %.2f\n", (t-a)/1048576, t/1048576}' /proc/meminfo)
+disk="$(df -h / | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}')"
+pkgs='?'
+if command -v nix-store >/dev/null 2>&1; then pkgs="$(nix-store -qR /run/current-system 2>/dev/null | wc -l | tr -d ' ')"; fi
+printf '%b~ > rice-fetch%b                         %s\n' "$D" "$R" "$HOME"
+printf '            ╭────╮                   %b%s@%s%b\n' "$B" "$USER" "$(hostname)" "$R"
+printf '          ╭─╯    ╰─╮\n'
+printf '          ╰─╮    ╭─╯   os      %s\n' "$os"
+printf '            ╰────╯     kernel  %s\n' "$kernel"
+printf '                       pkgs    %s\n' "$pkgs"
+printf '                       wm      sway\n'
+printf '                       host    %s\n' "$host_model"
+printf '                       up      %s\n' "${up:-?}"
+printf '                       ram     %s / %s GiB\n' "$mem_used" "$mem_total"
+printf '                       disk    %s\n' "$disk"
+printf '\n                       ●●●●○○○○\n'

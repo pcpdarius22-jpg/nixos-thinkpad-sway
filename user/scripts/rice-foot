@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Foot already receives the fixed monochrome palette from foot.ini. Keeping the
+# launcher free of per-window color overrides also avoids deprecated Foot keys.
+if footclient -N "$@"; then
+  exit 0
+fi
+exec foot "$@"
