@@ -1,0 +1,150 @@
+# v11.3.3 — ThinkPad T440 monochrome reference Sway rice
+# Full-color wallpaper, black/white applications, no visible window frames.
+
+include /etc/sway/config.d/*
+
+set $mod Mod4
+set $home /home/sloth
+set $term rice-foot
+set $menu fuzzel --config $home/.config/rice/generated/fuzzel.ini
+
+font pango:PxPlus IBM VGA 8x16 10
+floating_modifier $mod normal
+focus_follows_mouse no
+mouse_warping none
+workspace_auto_back_and_forth yes
+focus_on_window_activation smart
+
+# The wallpaper is the canvas. Windows are frameless black rectangles placed on
+# it — no white focus outline, no colored accent edge, no titlebar bezel.
+default_border none
+default_floating_border none
+gaps inner 0
+gaps outer 0
+smart_gaps on
+
+include $home/.config/rice/generated/sway-colors.conf
+
+input type:touchpad {
+    tap enabled
+    dwt enabled
+    middle_emulation enabled
+    natural_scroll disabled
+}
+input type:keyboard {
+    xkb_layout us
+}
+
+output * bg $home/.local/share/rice/wallpaper.jpg fill
+
+# One shared Foot server saves memory; rice-foot falls back automatically.
+exec foot --server
+
+# --- launchers -------------------------------------------------------------
+bindsym $mod+Return exec $term
+bindsym $mod+d exec $menu
+bindsym $mod+b exec qutebrowser
+bindsym $mod+e exec rice-foot -a editor -T nvim nvim
+bindsym $mod+y exec rice-foot -a yazi -T yazi rice-yazi
+bindsym $mod+x exec rice-foot -a btop -T btop btop
+bindsym $mod+m exec rice-foot -a music -T cmus cmus
+bindsym $mod+i exec rice-foot -a senpai -T senpai bash -lc 'senpai || { printf "senpai needs a valid IRC configuration.\n"; exec bash; }'
+bindsym $mod+r exec rice-foot -a torrents -T torrents torrents
+bindsym $mod+w exec wallpaper-menu
+bindsym $mod+Shift+w exec rice-foot -a nmtui -T network nmtui
+bindsym $mod+Shift+b exec blueman-manager
+bindsym $mod+Shift+a exec rice-foot -a audio -T audio pulsemixer
+bindsym $mod+Shift+f exec rice-foot -a sys -T system bash -lc 'rice-fetch; exec bash'
+
+# --- window workflow -------------------------------------------------------
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+bindsym $mod+Left focus left
+bindsym $mod+Down focus down
+bindsym $mod+Up focus up
+bindsym $mod+Right focus right
+
+bindsym $mod+Shift+h move left 20 px
+bindsym $mod+Shift+j move down 20 px
+bindsym $mod+Shift+k move up 20 px
+bindsym $mod+Shift+l move right 20 px
+bindsym $mod+Shift+Left move left 20 px
+bindsym $mod+Shift+Down move down 20 px
+bindsym $mod+Shift+Up move up 20 px
+bindsym $mod+Shift+Right move right 20 px
+
+bindsym $mod+Control+h resize shrink width 20 px
+bindsym $mod+Control+l resize grow width 20 px
+bindsym $mod+Control+k resize shrink height 20 px
+bindsym $mod+Control+j resize grow height 20 px
+
+bindsym $mod+space floating toggle
+bindsym $mod+c move position center
+bindsym $mod+f fullscreen toggle
+bindsym $mod+q kill
+bindsym $mod+Tab focus next
+bindsym $mod+Shift+Tab focus prev
+
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+
+# Reference screenshot arrangement; normal config reload stays separate.
+bindsym $mod+Shift+r exec rice-layout
+bindsym $mod+Control+r reload
+
+bindsym $mod+Shift+n exec notify-send 'what a notification!' 'merc: true lol'
+bindsym $mod+Escape exec swaylock -f -c 050505
+bindsym $mod+Shift+s exec swaylock -f -c 050505 && systemctl suspend
+bindsym $mod+Shift+e exec swaynag -t warning -m 'Exit Sway and return to tty1?' -B 'Yes, exit' 'swaymsg exit'
+
+# --- hardware --------------------------------------------------------------
+bindsym --locked XF86AudioRaiseVolume exec wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+
+bindsym --locked XF86AudioLowerVolume exec wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+bindsym --locked XF86AudioMute exec wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+bindsym --locked XF86AudioPlay exec playerctl play-pause
+bindsym --locked XF86AudioNext exec playerctl next
+bindsym --locked XF86AudioPrev exec playerctl previous
+bindsym --locked XF86AudioMicMute exec wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+bindsym --locked XF86MonBrightnessUp exec brightnessctl set +10%
+bindsym --locked XF86MonBrightnessDown exec brightnessctl set 10%-
+
+bindsym Print exec grim -g "$(slurp)" - | wl-copy
+bindsym $mod+Print exec mkdir -p ~/Pictures/Screenshots && grim ~/Pictures/Screenshots/$(date +%Y-%m-%d_%H-%M-%S).png
+
+exec swayidle -w \
+    timeout 600 'swaylock -f -c 050505' \
+    timeout 900 'swaymsg "output * power off"' \
+    resume 'swaymsg "output * power on"' \
+    before-sleep 'swaylock -f -c 050505'
+
+# Restart notification/native edge-text components on reload.
+exec_always rice-session
+
+# --- reference-like floating geometry -------------------------------------
+for_window [app_id="foot"] floating enable, border none, resize set 640 360, move position center
+for_window [app_id="editor"] floating enable, border none, resize set 620 430, move position center
+for_window [app_id="yazi"] floating enable, border none, resize set 700 480, move position center
+for_window [app_id="btop"] floating enable, border none, resize set 760 520, move position center
+for_window [app_id="music"] floating enable, border none, resize set 650 420, move position center
+for_window [app_id="senpai"] floating enable, border none, resize set 690 370, move position center
+for_window [app_id="torrents"] floating enable, border none, resize set 650 400, move position center
+for_window [app_id="nmtui"] floating enable, border none, resize set 620 420, move position center
+for_window [app_id="audio"] floating enable, border none, resize set 560 360, move position center
+for_window [app_id="sys"] floating enable, border none, resize set 500 290, move position center
+for_window [app_id="qute-editor"] floating enable, border none, resize set 620 430, move position center
+for_window [app_id="qutebrowser"] floating enable, border none, resize set 620 650, move position 60 95
+for_window [app_id="org.qutebrowser.qutebrowser"] floating enable, border none, resize set 620 650, move position 60 95
+for_window [app_id="mpv"] floating enable, border none, resize set 760 500, move position center
+for_window [app_id="blueman-manager"] floating enable, border none, resize set 620 420, move position center
+for_window [class="Blueman-manager"] floating enable, border none, resize set 620 420, move position center
+for_window [app_id="org.pwmt.zathura"] floating enable, border none, resize set 760 650, move position center
